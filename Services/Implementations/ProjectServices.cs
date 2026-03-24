@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MyDummyAPI.Data;
 using MyDummyAPI.DTOs;
 using MyDummyAPI.Enums;
+using MyDummyAPI.HelperServices;
 using MyDummyAPI.Models;
 using MyDummyAPI.Repositories.Interfaces;
 using MyDummyAPI.Services.Interfaces;
@@ -65,6 +66,27 @@ namespace MyDummyAPI.Services.Implementations
             return result;
         }
 
+        public async Task<ResponseServices<Project>> softDelete(int id)
+        {
+            var response = new ResponseServices<Project>();
+            try
+            {
+
+            var data = await projectRepo.softDelete(id);
+
+            response.data = data;
+            response.message = "Project added successfully";
+            response.status = true;
+            return response;
+            }catch(Exception ex)
+            {
+                response.data = new Project();
+                response.message = "Project does't exist or Project is already deleted";
+                response.status = false;
+                return response;
+            }
+        }
+
         public async Task<UpdateProjectDTO?> updateProject(int id, UpdateProjectDTO updateProjectDTO)
         {
             var project = new Project
@@ -76,8 +98,6 @@ namespace MyDummyAPI.Services.Implementations
                 EndDate = updateProjectDTO.EndDate,
                 StartDate = updateProjectDTO.StartDate,
                 Status = updateProjectDTO.Status,
-                //ManagedByPartnerId = int.Parse(updateProjectDTO.PartnerName),
-                //ProfileId = updateProjectDTO.ProfileId,
                 TechnologyStack = updateProjectDTO.TechnologyStack,
                 ManagerName = updateProjectDTO.ManagerName,
                 ManagerEmail = updateProjectDTO.ManagerEmail,
@@ -87,11 +107,6 @@ namespace MyDummyAPI.Services.Implementations
                 ClientManagerEmail = updateProjectDTO.ClientManagerEmail,
                 ClientManagerContact = updateProjectDTO.ClientManagerContact,
                 IsSmooth = updateProjectDTO.IsSmooth,
-                //MobileNumberUsed = projectDTO.MobileNumberUsed,
-                //InterviewingUserId  = projectDTO.InterviewingUserId,
-                //IsToolUsed = projectDTO.IsToolUsed
-
-
             };
 
             var result = await projectRepo.updateProject(project, id);

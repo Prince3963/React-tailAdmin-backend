@@ -1,4 +1,5 @@
 ﻿using MyDummyAPI.DTOs;
+using MyDummyAPI.HelperServices;
 using MyDummyAPI.Models;
 
 namespace MyDummyAPI.Services.Interfaces
@@ -9,5 +10,6 @@ namespace MyDummyAPI.Services.Interfaces
         Task<Project> getProjectById(int id);
         Task<ProjectDTO> addProject(ProjectDTO projectDTO);
         Task<UpdateProjectDTO?> updateProject(int id, UpdateProjectDTO projectDTO);
+        Task<ResponseServices<Project>> softDelete(int id);
     }
 }

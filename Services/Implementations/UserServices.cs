@@ -6,6 +6,7 @@ using MyDummyAPI.HelperServices;
 using MyDummyAPI.Models;
 using MyDummyAPI.Repositories.Interfaces;
 using MyDummyAPI.Services.Interfaces;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MyDummyAPI.Services.Implementations
 {
@@ -54,13 +55,13 @@ namespace MyDummyAPI.Services.Implementations
                     Email = userDTO.Email,
                     MobileNumber = userDTO.MobileNumber,
                     Gender = userDTO.Gender,
-                    PasswordHash = userDTO.PasswordHash, 
+                    PasswordHash = userDTO.PasswordHash,
                     EmergencyMobileNumber = userDTO.EmergencyMobileNumber,
                     Role = userDTO.Role,
                     IsActive = userDTO.IsActive,
                 };
 
-                
+
                 await dbContext.Users.AddAsync(newUser);
                 await dbContext.SaveChangesAsync();
 
@@ -134,19 +135,17 @@ namespace MyDummyAPI.Services.Implementations
         {
             var response = new ResponseServices<LoginDTO>();
 
-            var existEmail = await userRepo.existEmail(loginDTO.Email);
+            var user = await userRepo.existEmail(loginDTO.Email);
 
-            if (existEmail == null)
+            if (user == null)
             {
-                response.data = null;
                 response.message = "Email does not exist";
                 response.status = false;
                 return response;
             }
 
-            if (existEmail.PasswordHash != loginDTO.PasswordHash)
+            if (user.PasswordHash != loginDTO.PasswordHash)
             {
-                response.data = null;
                 response.message = "Invalid credentials";
                 response.status = false;
                 return response;
@@ -154,8 +153,8 @@ namespace MyDummyAPI.Services.Implementations
 
             response.data = new LoginDTO
             {
-                Email = existEmail.Email,
-                PasswordHash = existEmail.PasswordHash
+                Email = user.Email,
+                PasswordHash = user.PasswordHash
             };
 
             response.message = "Login successful";
@@ -166,10 +165,108 @@ namespace MyDummyAPI.Services.Implementations
 
         public async Task<List<User>> getAllUsers()
         {
-            return await dbContext.Users
-                .Include(u => u.Employee)
-                .Include(u => u.Partner)
-                .ToListAsync();
+            return await userRepo.getAllUser();
+        }
+
+        public async Task<ResponseServices<User>> getUserById(int id)
+        {
+            var response = new ResponseServices<User>();
+            try
+            {
+                var exisUser = await userRepo.getById(id);
+                if (exisUser == null)
+                {
+                    response.data = null;
+                    response.message = "Id not found";
+                    response.status = false;
+
+                    return response;
+                }
+
+                response.data = exisUser;
+                response.message = "User fetched successfully";
+                response.status = true;
+
+                return response;
+            }
+            catch (Exception e)
+            {
+                response.data = new User();
+                response.message = "User not exist or user is deleted";
+                response.status = false;
+                return response;
+            }
+        }
+
+        public async Task<ResponseServices<User>> softDelete(int id)
+        {
+            var response = new ResponseServices<User>();
+            try
+            {
+                var existUser = await userRepo.deleteUser(id);
+                response.data = existUser;
+                response.message = "User added successfully";
+                response.status = true;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.data = new User();
+                response.message = "User does't exist or User is already deleted";
+                response.status = false;
+                return response;
+            }
+
+        }
+
+        public async Task<ResponseServices<UpdateUserDTO>> updateUser(int id, UpdateUserDTO userDTO)
+        {
+            var response = new ResponseServices<UpdateUserDTO>();
+            try
+            {
+                var newUser = new User
+                {
+                    Username = userDTO.Username,
+                    Email = userDTO.Email,
+                    FirstName = userDTO.FirstName,
+                    LastName = userDTO.LastName,
+                    MobileNumber = userDTO.MobileNumber,
+                    EmergencyMobileNumber = userDTO.EmergencyMobileNumber,
+                    Role = userDTO.Role,
+                    Gender = userDTO.Gender,
+                    IsActive = userDTO.IsActive,
+                };
+
+                var result = await userRepo.updateUser(id, newUser);
+
+                var updatedUser = new UpdateUserDTO
+                {
+                    Username = result.Username,
+                    Email = result.Email,
+                    FirstName = result.FirstName,
+                    LastName = result.LastName,
+                    MobileNumber = result.MobileNumber,
+                    EmergencyMobileNumber = result.EmergencyMobileNumber,
+                    Role = result.Role,
+                    Gender = result.Gender,
+                    IsActive = result.IsActive,
+                };
+
+                response.data = updatedUser;
+                response.message = "Success";
+                response.status = true;
+
+                return response;
+
+            }
+            catch (Exception e)
+            {
+                response.data = new UpdateUserDTO();
+                response.message = "check service layer";
+                response.status = false;
+
+                return response;
+            }
         }
     }
 }

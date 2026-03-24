@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using MyDummyAPI.Data;
 using MyDummyAPI.Models;
 using MyDummyAPI.Repositories.Interfaces;
@@ -21,16 +22,32 @@ namespace MyDummyAPI.Repositories.Implementations
 
         public async Task<List<Project>> getAllProject()
         {
-            return await dbContext.Projects.ToListAsync();
+            return await dbContext.Projects
+                .Where(p => p.IsDeleted == false)
+                .ToListAsync();
         }
 
         public async Task<Project> getProjectById(int id)
         {
-            var existProject = await dbContext.Projects.FirstOrDefaultAsync(x => x.Id == id);
+            var existProject = await dbContext.Projects.FirstOrDefaultAsync(p => p.Id == id && p.IsDeleted == false);
             if (existProject == null)
             {
                 return new Project();
             }
+
+            return existProject;
+        }
+
+        public async Task<Project> softDelete(int id)
+        {
+            var existProject = await dbContext.Projects.FirstOrDefaultAsync(p => p.Id == id);
+            if (existProject == null || existProject.IsDeleted == true)
+            {
+                throw new Exception("Invalid Id Project does't exist");
+            }
+
+            existProject.IsDeleted = true;  
+            await dbContext.SaveChangesAsync();
 
             return existProject;
         }
@@ -50,7 +67,6 @@ namespace MyDummyAPI.Repositories.Implementations
             existingProject.EndDate = project.EndDate;
             existingProject.StartDate = project.StartDate;
             existingProject.Status = project.Status;
-            //existingProject.ManagedByPartnerId = project.ManagedByPartnerId;
             existingProject.TechnologyStack = project.TechnologyStack;
             existingProject.ManagerName = project.ManagerName;
             existingProject.ManagerEmail = project.ManagerEmail;

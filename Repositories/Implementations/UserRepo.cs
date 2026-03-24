@@ -14,27 +14,19 @@ namespace MyDummyAPI.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task<User> addUser(User user)
-        {
-            await dbContext.Users.AddAsync(user);
-            await dbContext.SaveChangesAsync();
-
-            return user;
-        }
-
         public async Task<List<User>> getAllUser()
         {
-            var result = await dbContext.Users.ToListAsync();
+            var result = await dbContext.Users
+                .Where(u => u.IsDeleted == false)
+                .Include(u => u.Employee)
+                .Include(u => u.Partner)
+                .ToListAsync();
             return result;
         }
 
         public async Task<User> existEmail(string email)
         {
             var existEmail = await dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
-            if (existEmail == null)
-            {
-                return new User();
-            }
             return existEmail;
         }
 
@@ -44,6 +36,52 @@ namespace MyDummyAPI.Repositories.Implementations
                 .FirstOrDefaultAsync(u => u.Username == username);
 
             return result;
+        }
+
+        public async Task<User> getById(int id)
+        {
+            var existUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id && u.IsDeleted == false);
+            if (existEmail == null)
+            {
+                return null;
+            }
+
+            return existUser;
+        }
+
+        public async Task<User> deleteUser(int id)
+        {
+            var existUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (existUser == null || existUser.IsDeleted == true)
+            {
+                throw new Exception("Invalid Id User does't exist");
+            }
+
+            existUser.IsDeleted = true;
+            await dbContext.SaveChangesAsync();
+            return existUser;
+        }
+
+        public async Task<User> updateUser(int id, User user)
+        {
+            var existUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (existUser == null || existUser.IsDeleted == true)
+            {
+                throw new Exception("Invalid Id User does't exist");
+            }
+
+            existUser.Username = user.Username;
+            existUser.FirstName = user.FirstName;
+            existUser.LastName = user.LastName;
+            existUser.Email = user.Email;
+            existUser.Role = user.Role;
+            existUser.Gender = user.Gender;
+            existUser.MobileNumber = user.MobileNumber;
+            existUser.EmergencyMobileNumber = user.EmergencyMobileNumber;
+            existUser.IsActive = user.IsActive;
+
+            await dbContext.SaveChangesAsync();
+            return existUser;
         }
     }
 }

@@ -36,5 +36,26 @@ namespace MyDummyAPI.Controllers
             var result = await userServices.existEmail(loginDTO);
             return Ok(result);
         }
+
+        [HttpGet("GetById/{id}")]
+        public async Task<IActionResult> getById(int id)
+        {
+            var result = await userServices.getUserById(id);
+            return Ok(result);
+        }
+
+        [HttpDelete("DeleteUser/{id}")]
+        public async Task<IActionResult> deleteById(int id)
+        {
+            var result = await userServices.softDelete(id);
+            return Ok(result);
+        }
+
+        [HttpPut("UpdateUser/{id}")]
+        public async Task<IActionResult> updateUser(int id, UpdateUserDTO userDTO)
+        {
+            var result = await userServices.updateUser(id, userDTO);
+            return Ok(result);
+        }
     }
 }

@@ -44,5 +44,13 @@ namespace MyDummyAPI.Controllers
             var result = await projectServices.updateProject(id, updateProjectDTO);
             return Ok(result);
         }
+
+        [HttpDelete("DeleteProject/{id}")]
+        public async Task<IActionResult> softDelete(int id)
+        {
+            var result = await projectServices.softDelete(id);
+            
+            return Ok(result);
+        }
     }
 }
